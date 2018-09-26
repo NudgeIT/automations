@@ -43,9 +43,9 @@ param (
     [Parameter(Mandatory = $false, HelpMessage = '{
         "Title": "HomeDirectory",
         "Description": "HomeDirectory",
-        "Placeholder": "i.e. \\server\samaccountname",
+        "Placeholder": "i.e. \\server\username",
         "ErrorMessage": {
-            "Mandatory": "This field is mandatory, please provide a value. i.e. \\server\samaccountname"
+            "Mandatory": "This field is mandatory, please provide a value. i.e. \\server\username"
         }
     }')]
     [String]$HomeDirectory,
@@ -73,8 +73,8 @@ param (
     [String]$DisplayName,
 
     [Parameter(Mandatory = $true, HelpMessage = '{
-        "Title": "SamAccountName",
-        "Description": "SamAccountName",
+        "Title": "UserName",
+        "Description": "UserName",
         "Placeholder": "i.e. John Smith",
         "ErrorMessage": {
             "Mandatory": "This field is mandatory, please provide a value. i.e. jsmith"

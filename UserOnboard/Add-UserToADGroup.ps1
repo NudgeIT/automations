@@ -1,8 +1,8 @@
 param (
     
     [Parameter(Mandatory = $false, HelpMessage = '{
-    "Title": "SamAccountName",
-    "Description": "SamAccountName",
+    "Title": "UserName",
+    "Description": "User Name",
     "Placeholder": "i.e. jsmith",
     "ErrorMessage": {
         "Mandatory": "This field is mandatory, please provide a value. i.e. jsmith"

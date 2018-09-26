@@ -14,8 +14,8 @@ param (
     [object]$TemplateUser,
 
     [Parameter(Mandatory = $true, HelpMessage = '{
-        "Title": "SamAccountName",
-        "Description": "SamAccountName",
+        "Title": "UserName",
+        "Description": "UserName",
         "Placeholder": "i.e. jsmith",
         "ErrorMessage": {
             "Mandatory": "This field is mandatory, please provide a value."
@@ -105,6 +105,17 @@ param (
     
 )
 
+#Script Configuration
+$TerminalServicesProfilePath = ""  #Ex: "\\filesrv\profiles$\$UserName"
+$HomeDirectoryPath = "" #Ex: "\\filesrv\users$\$UserName"
+$HomeDriveLetter = "" #Ex: "M"
+$Domain = "" #Ex: "domain.local"
+$domainAdminsSID = "" #Fill in your domain admins group SID
+$ExchangeServerUri = "" #Ex: "https://exchange.domain.local:443/PowerShell/"
+$WsldPath       = "" #Ex: "D:\automation\pbx\pbx.wsdl"
+$ApiUrl         = "" #Ex: "https://10.0.0.100"
+###
+
 #Logging configuration
 $Script:VerbosePreference = 'SilentlyContinue'
 $Script:CustomVerbosePreference = $true
@@ -117,7 +128,6 @@ trap {
 
 #Create AD User
 Write-Verbose "Creating AD User." -Verbose:$CustomVerbosePreference
-$Domain = 'verit.ch'
 $accountPassword = New-NiboRandomPassword -passLength 10 -lowerCase -upperCase -numbers
 $newUserProperties = @{
     DisplayName                 = "$Surname $GivenName"
@@ -126,9 +136,9 @@ $newUserProperties = @{
     Title                       = $Title
     Description                 = $Department
     AccountPassword             = ($accountPassword | ConvertTo-SecureString -AsPlainText -Force)
-    TerminalServicesProfilePath = "\\filesrv\profiles$\$SamAccountName"
-    HomeDirectory               = "\\filesrv\users$\$SamAccountName"
-    HomeDrive                   = "M"
+    TerminalServicesProfilePath = $TerminalServicesProfilePath
+    HomeDirectory               = $HomeDirectoryPath
+    HomeDrive                   = $HomeDriveLetter
 }
 $boundProperties = $PSBoundParameters
 $removeProperties = @(
@@ -191,28 +201,25 @@ if ($TemplateUser) {
 
 #Configure Shares
 Write-Verbose "Assigning permissions." -Verbose:$CustomVerbosePreference
-$profileFolder = "\\filesrv\profiles$\$SamAccountName"
-if (-not (Test-Path $profileFolder)) {
-    New-Item -ItemType Directory -Path $profileFolder -Force
+if (-not (Test-Path $newUserProperties.TerminalServicesProfilePath)) {
+    New-Item -ItemType Directory -Path $newUserProperties.TerminalServicesProfilePath -Force
 }
-$homefolder = "\\filesrv\users$\$SamAccountName"
-if (-not (Test-Path $homefolder)) {
-    New-Item -ItemType Directory -Path $homefolder -Force
+if (-not (Test-Path $newUserProperties.HomeDirectory)) {
+    New-Item -ItemType Directory -Path $newUserProperties.HomeDirectory -Force
 }
 $systemUserSID = 'S-1-5-18'
-$domainAdminsSID = '' #Fill in your domain admins SID
-Add-NTFSAccess -Path $profileFolder -Account $systemUserSID -AccessRights FullControl
-Add-NTFSAccess -Path $profileFolder -Account $domainAdminsSID -AccessRights FullControl
-Add-NTFSAccess -Path $profileFolder -Account $newADUser.SID -AccessRights Read, ReadAndExecute, Modify
-Disable-NTFSAccessInheritance $profileFolder -RemoveInheritedAccessRules
-Add-NTFSAccess -Path $homefolder -Account $systemUserSID -AccessRights FullControl
-Add-NTFSAccess -Path $homefolder -Account $domainAdminsSID -AccessRights FullControl
-Add-NTFSAccess -Path $homefolder -Account $newADUser.SID -AccessRights Read, ReadAndExecute, Modify
-Disable-NTFSAccessInheritance $homefolder -RemoveInheritedAccessRules
+Add-NTFSAccess -Path $newUserProperties.TerminalServicesProfilePath -Account $systemUserSID -AccessRights FullControl
+Add-NTFSAccess -Path $newUserProperties.TerminalServicesProfilePath -Account $domainAdminsSID -AccessRights FullControl
+Add-NTFSAccess -Path $newUserProperties.TerminalServicesProfilePath -Account $newADUser.SID -AccessRights Read, ReadAndExecute, Modify
+Disable-NTFSAccessInheritance $newUserProperties.TerminalServicesProfilePath -RemoveInheritedAccessRules
+Add-NTFSAccess -Path $newUserProperties.HomeDirectory -Account $systemUserSID -AccessRights FullControl
+Add-NTFSAccess -Path $newUserProperties.HomeDirectory -Account $domainAdminsSID -AccessRights FullControl
+Add-NTFSAccess -Path $newUserProperties.HomeDirectory -Account $newADUser.SID -AccessRights Read, ReadAndExecute, Modify
+Disable-NTFSAccessInheritance $newUserProperties.HomeDirectory -RemoveInheritedAccessRules
 
 #Configure Exchange
 Write-Verbose "Configure Exchange Account" -Verbose:$CustomVerbosePreference
-$ExchangeServerUri = 'https://exchange.domain.local:443/PowerShell/' #Replace with your Exchange URI
+
 $ExchangeCredential = Get-AutomationPSCredential -Name 'exchange-admin'
 $ImportedCommands = @(
     'Get-Mailbox'
@@ -245,8 +252,8 @@ catch {
 #Add user to InovaPhone System
 Write-Verbose "Add user to Innovaphone system." -Verbose:$CustomVerbosePreference
 $newPbxUserProperties = @{
-    WsldPath       = 'D:\automation\pbx\pbx.wsdl'
-    ApiUrl         = 'https://10.0.0.100'
+    WsldPath       = $WsldPath
+    ApiUrl         = $ApiUrl
     ApiCredential  = Get-AutomationPSCredential -Name 'pbx-admin'
     ApiUserName    = '' #The user that will make the API calls
     DisplayName    = $newUserProperties.DisplayName

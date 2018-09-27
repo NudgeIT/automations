@@ -105,12 +105,12 @@ param (
     
 )
 
-#Script Configuration
+#Script Configuration -- Needs to be filled according to your configuration
 $TerminalServicesProfilePath = ""  #Ex: "\\filesrv\profiles$\$UserName"
 $HomeDirectoryPath = "" #Ex: "\\filesrv\users$\$UserName"
 $HomeDriveLetter = "" #Ex: "M"
 $Domain = "" #Ex: "domain.local"
-$domainAdminsSID = "" #Fill in your domain admins group SID
+$domainAdminsSID = "" #
 $ExchangeServerUri = "" #Ex: "https://exchange.domain.local:443/PowerShell/"
 $WsldPath       = "" #Ex: "D:\automation\pbx\pbx.wsdl"
 $ApiUrl         = "" #Ex: "https://10.0.0.100"
